@@ -1,0 +1,19 @@
+Functionality:
+-Shooting (1/2 fin)
+-Meteor destruction (1/2 fin)
+-Health
+-Timer
+
+Visuals (asic lvl1):
+
+-health gui
+-Menu
+-Cutscene/story
+-bullets
+
+
+Secondary/ideas:
+-thrusters
+-Blackhole
+-Aliens
+
