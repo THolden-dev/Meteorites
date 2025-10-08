@@ -61,7 +61,9 @@ var Assets = {
     "BlackBackground" : "Assets/BlackBackground.png",
     "CrystalBackground" : "Assets/CrystalBackground.png",
     "SemiTransparent" : "Assets/SemiTransparent.png",
-    "MenuBackground" : "Assets/MenuBackground.png"
+    "MenuBackground" : "Assets/MenuBackground.png",
+    "EnergyCell" : "Assets/EnergyCell.png",
+    "BeginningAnimation" : "Assets/Animations/InitialAnimation/Ani"
 };
 
 var SoundSrcs = {
@@ -73,7 +75,7 @@ var SoundSrcs = {
 }
 //Records of sprites hold FrameWidth,FrameHeight,SpriteLength,AniSpeed(in ticks)
 var Sprites = {
-    "Explosion" : ["Assets/Sprites/Explosion/Explosion.png",50,50,3,10]
+    "Explosion" : ["Assets/Sprites/Explosion/Explosion.png",199,239,7,10]
 }
 
 class Line
@@ -428,7 +430,7 @@ class SpriteAnimation
         this.CurrentFrame = 0;
         this.FrameRate = Sprites[AniName][4];
         this.FrameWidth = Sprites[AniName][1]
-        this.FrameHeight = Sprites[AniName][1];
+        this.FrameHeight = Sprites[AniName][2];
         this.FrameX = 0;
         this.FrameY = 0;
         this.Length = Sprites[AniName][3]
@@ -503,6 +505,44 @@ class ForegroundImage extends BackgroundImage
     }
 }
 
+class CutScene extends  ForegroundImage
+{
+    constructor(x,y,width, height,SourceName,Vis,FPS,NumOfFrames, ctx) {
+        super(x,y,width, height,"Character",Vis, ctx);
+        this.FrameNum = 0;
+        this.Source = Assets[SourceName];
+        this.InitalTick = GameTicks;
+        this.ImgFrames = [];
+        this.SecondsPerFrame = 1 / FPS;
+        this.NumOfFrames = NumOfFrames;
+        this.loadAnimation();
+    }
+    loadAnimation()
+    {
+        for (let i = 0; i < this.NumOfFrames; i++)
+        {
+            let curImg = new Image();
+            curImg.src = this.Source + i + ".png";
+            console.log(curImg.src)
+            this.ImgFrames.push(curImg);
+        }
+    }
+    handAnimation()
+    {
+        if (ticksToSeconds(GameTicks - this.InitalTick) >= this.SecondsPerFrame && this.FrameNum < this.NumOfFrames)
+        {
+            this.InitalTick = GameTicks;
+            console.log(this.Source + this.FrameNum + ".png")
+            this.Image = this.ImgFrames[this.FrameNum]
+            this.FrameNum++;
+        }
+    }
+
+    update() {
+        this.handAnimation();
+        super.update();
+    }
+}
 class Bullet
 {
     constructor(x,y,Rotation,width, height, ctx)
@@ -690,7 +730,7 @@ class Asteroid
                 AstroidsPresent -= 1;
                 spawnMiniAsteroids("", this.x, this.y,this.width, this.height);
                 GameSounds.push(new Sound("Crash",false,this.x,this.y))
-                AddObjStack.push(new SpriteAnimation("Explosion", this.x,this.y,90, 90, false,true,true, GameContext));
+                AddObjStack.push(new SpriteAnimation("Explosion", this.x,this.y,120, 120, false,true,true, GameContext));
             }
         }
     }
@@ -955,7 +995,6 @@ class MinAsteroid extends Asteroid
     }
 }
 
-
 class Character
 {
     constructor(width, height, x, y, ctx) {
@@ -1153,14 +1192,17 @@ class Booster extends DestinationPointer{
 
 class TargetPoint
 {
-    constructor(x,y,ArrivalFunction,FuncArgs) {
+    constructor(AssetName,x,y,ArrivalFunction,FuncArgs,ctx) {
         this.x = x;
         this.y = y;
+        this.Image = new Image();
+        this.Image.src = Assets[AssetName];
         this.MinDistance = 200;
         this.ArrivalFunction = ArrivalFunction;
         this.FuncArgs = FuncArgs;
         this.CurDispX = XDisplacement;
         this.CurDispY = YDisplacement;
+        this.ctx = ctx;
     }
 
     update()
@@ -1176,8 +1218,7 @@ class TargetPoint
             this.ArrivalFunction(this.FuncArgs);
         }
 
-        GameContext.fillStyle = this.color;
-        GameContext.fillRect(this.x, this.y, 50, 50);
+        this.ctx.drawImage(this.Image, this.x, this.y);
 
     }
 }
@@ -1356,7 +1397,7 @@ function ChangeScene(Scene)
         {
             SpawnAsteroids = false;
             Background = new BackgroundImage(0,0,1080, 700,"MenuBackground", MainGameArea.context);
-            GameObjects.push(new ScreenImageButton("Character",200,200, 50, ChangeScene,"Tutorial",50,true,GameContext))
+            GameObjects.push(new ScreenImageButton("Character",200,200, 50, ChangeScene,"BeginCutscene",50,true,GameContext))
             GameObjects.push(new Text(200,100,"ASTEROIDS","RobotInvaders","100px","white",GameContext) );
         }
         else if (Scene === "MainGame")
@@ -1366,10 +1407,12 @@ function ChangeScene(Scene)
             AstroidsPresent = 0;
             MaxAstroids = 60;
             GameCharacter.MaxSpeed = 4;
+            GameTargetPosition[0] = -5000;
+            GameTargetPosition[1] = -2000;
             //HealthBar = new  StatBar(10,600,"white", GameCharacter.MaxHealth,100, 700, 30,GameContext);
             AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,false,false,GameTicks,100,GameContext));
             AddObjStack.push(new DestinationPointer("Character",GameCharacter.x + GameCharacter.width/2,GameCharacter.y + GameCharacter.height/2, GameContext));
-            AddObjStack.push(new TargetPoint(GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"Poem"));
+            AddObjStack.push(new TargetPoint("EnergyCell",GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"Poem",MainGameArea.context));
             Background = new BackgroundImage(-1032,-1000,1022, 1500,"Background", MainGameArea.context);
             SpawnAsteroids = true;
         }
@@ -1385,6 +1428,8 @@ function ChangeScene(Scene)
             MaxAstroids = 30;
             AstroidsPresent = 0;
             AsteroidAsset = "CrystalAsteroid";
+            GameTargetPosition[0] = -3000;
+            GameTargetPosition[1] = 1000;
             for (let i = 0; i < MaxAstroids; i++)
             {
                 AddObjStack.push(new CrystalAsteroid(AsteroidAsset,60,120,GameContext));
@@ -1397,7 +1442,7 @@ function ChangeScene(Scene)
             AddObjStack.push(new TimerSwitch(100,100,"hello","Ariel",10,"white",true,restartSwitchTimers,true,GameTicks,AsteroidWaitTime,GameContext));
 
             AddObjStack.push(new DestinationPointer("Character",GameCharacter.x + GameCharacter.width/2,GameCharacter.y + GameCharacter.height/2, GameContext));
-            AddObjStack.push(new TargetPoint(GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"Poem"));
+            AddObjStack.push(new TargetPoint("EnergyCell",GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"Poem",MainGameArea.context));
             Background = new BackgroundImage(-1700,-1150,1022, 1500,"CrystalBackground", MainGameArea.context);
             GameCharacter.MaxSpeed = 4;
             SpawnAsteroids = true;
@@ -1423,6 +1468,12 @@ function ChangeScene(Scene)
             hyperDrive();
 
             PoemNumber++;
+        }
+        else  if ( Scene === "BeginCutscene")
+        {
+            SpawnAsteroids = false;
+            AddObjStack.push(new CutScene(0,0,20, 20,"BeginningAnimation",true,1,5, MainGameArea.context))
+            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,10,GameContext));
         }
         else if (Scene === "Tutorial")
         {
