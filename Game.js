@@ -85,13 +85,13 @@ for (const [key, path] of Object.entries(ImgPaths)) {
 }
 
 var SoundSrcs = {
-    "Shooting" : "Assets/Sounds/Shot.mp3",
-    "Thruster" : "Assets/Sounds/Thruster.mp3",
-    "Crash" : "Assets/Sounds/AsteroidCrash.mp3",
-    "Shatter" : "Assets/Sounds/Shatter.mp3",
-    "Hyperspace" : "Assets/Sounds/Hyperspace.mp3",
-    "FabricOfSpace" : "Assets/Sounds/FabricofSpace.mp3",
-    "HeartOfEternity" : "Assets/Sounds/HeartofEternity.mp3"
+    "Shooting" : new Audio("Assets/Sounds/Shot.mp3"),
+    "Thruster" : new Audio("Assets/Sounds/Thruster.mp3"),
+    "Crash" : new Audio("Assets/Sounds/AsteroidCrash.mp3"),
+    "Shatter" : new Audio("Assets/Sounds/Shatter.mp3"),
+    "Hyperspace" : new Audio("Assets/Sounds/Hyperspace.mp3"),
+    "FabricOfSpace" : new Audio("Assets/Sounds/FabricofSpace.mp3"),
+    "HeartOfEternity" : new Audio("Assets/Sounds/HeartofEternity.mp3")
 }
 //Records of sprites hold FrameWidth,FrameHeight,SpriteLength,AniSpeed(in ticks)
 var SpritesSrc = {
@@ -180,32 +180,15 @@ class Sound
 {
     constructor(SoundSrc, looping, x, y) {
         this.Source = SoundSrc;
-        this.sound = document.createElement("audio");
-        this.sound.src = SoundSrcs[this.Source];
-        this.sound.setAttribute("preload", "auto");
-        this.sound.setAttribute("controls", "none");
-        this.sound.style.display = "none";
+        this.sound = SoundSrcs[this.Source].cloneNode();
         this.MaxAudDis = 600
         this.x = x;
         this.y = y
         this.Playing = false;
-
+        this.Looping = looping;
         this.checkVolume()
-        document.body.appendChild(this.sound);
         this.sound.play();
 
-        console.log(looping);
-        this.sound.addEventListener('ended', function (event){
-            if (looping){
-                event.target.currentTime = 0;
-            }
-            else if (!looping)
-            {
-                console.log("removing")
-                event.target.remove();
-            }
-
-        })
 
     }
 
@@ -228,15 +211,20 @@ class Sound
     }
     changeSound(NewSound)
     {
-        this.sound.src = SoundSrcs[NewSound];
+        this.sound = SoundSrcs[NewSound].cloneNode();
         this.sound.currentTime = 0;
         this.sound.play();
     }
     update()
     {
-        if (!this.sound.isConnected)
+        if (this.sound.ended && !this.Looping)
         {
             GameSounds.splice(GameSounds.indexOf(this),1);
+        }
+        else if (this.Looping)
+        {
+            this.sound.currentTime = 0;
+            this.sound.play();
         }
     }
     stop()
@@ -1543,16 +1531,16 @@ function ChangeScene(Scene)
             EngineBooster = new Booster("Fire1",20,60, GameContext);
             if (BoosterSound)
             {
-                if (BoosterSound.sound.isConnected)
+                if (!BoosterSound.sound.ended)
                 {
-                    BoosterSound.sound.remove();
+                    BoosterSound.sound.pause();
                 }
             }
             if (MainMusic)
             {
-                if (MainMusic.sound.isConnected)
+                if (!MainMusic.sound.ended)
                 {
-                    MainMusic.sound.remove();
+                    MainMusic.sound.pause();
                 }
             }
             BoosterSound = new Sound("Thruster",true, GameCharacter.x, GameCharacter.y);
