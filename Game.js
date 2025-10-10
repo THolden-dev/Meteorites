@@ -2,10 +2,12 @@ var GameCharacter;
 var Background;
 var Foreground;
 var RestartButton;
+var RestartText;
 var HealthBar;
 var EngineBooster;
 var BoosterSound;
 var HyperspaceSound;
+var MainMusic;
 
 var GameContext = "";
 let GameObjects = [];
@@ -63,7 +65,11 @@ var Assets = {
     "SemiTransparent" : "Assets/SemiTransparent.png",
     "MenuBackground" : "Assets/MenuBackground.png",
     "EnergyCell" : "Assets/EnergyCell.png",
-    "BeginningAnimation" : "Assets/Animations/InitialAnimation/Ani"
+    "BeginningAnimation" : "Assets/Animations/InitialAnimation/Ani",
+    "EndingAnimation" : "Assets/Animations/Ending/Ending",
+    "SectorAnimation" : "Assets/Animations/SectorAni/SectorAni",
+    "Play" : "Assets/LaunchButton.png",
+    "Restart" : "Assets/RButtonText.png"
 };
 
 var SoundSrcs = {
@@ -71,11 +77,14 @@ var SoundSrcs = {
     "Thruster" : "Assets/Sounds/Thruster.mp3",
     "Crash" : "Assets/Sounds/AsteroidCrash.mp3",
     "Shatter" : "Assets/Sounds/Shatter.mp3",
-    "Hyperspace" : "Assets/Sounds/Hyperspace.mp3"
+    "Hyperspace" : "Assets/Sounds/Hyperspace.mp3",
+    "FabricOfSpace" : "Assets/Sounds/FabricofSpace.mp3",
+    "HeartOfEternity" : "Assets/Sounds/HeartofEternity.mp3"
 }
 //Records of sprites hold FrameWidth,FrameHeight,SpriteLength,AniSpeed(in ticks)
 var Sprites = {
-    "Explosion" : ["Assets/Sprites/Explosion/Explosion.png",199,239,7,10]
+    "Explosion" : ["Assets/Sprites/Explosion/Explosion.png",199,239,7,10],
+    "Explosion2" : ["Assets/Sprites/Explosion/Explosion2.png",199,239,7,10]
 }
 
 class Line
@@ -197,6 +206,11 @@ class Sound
             this.sound.volume = 0;
         }
     }
+    changeSound(NewSound)
+    {
+        this.sound.src = SoundSrcs[NewSound];
+        this.sound.currentTime = 0;
+    }
     update()
     {
         if (!this.sound.isConnected)
@@ -283,7 +297,7 @@ class TextTimer extends Text
         this.TimerLength = Time;
 
         this.TimerEnded = false;
-        this.Visible = Vis;
+        this.Visible = false;
         this.Activated = false;
         this.Function = Function;
         this.FuncArgs = FuncArgs;
@@ -390,8 +404,8 @@ class DestinationPointer
         this.CenterY = y;
         this.DistanceFromCent = 100;
         this.Rotation = 0;
-        this.width = 50;
-        this.height = 50;
+        this.width = 30;
+        this.height = 30;
         this.Image = new Image();
         this.Image.src = Assets[AssetName];
         this.ctx = ctx;
@@ -508,7 +522,7 @@ class ForegroundImage extends BackgroundImage
 class CutScene extends  ForegroundImage
 {
     constructor(x,y,width, height,SourceName,Vis,FPS,NumOfFrames, ctx) {
-        super(x,y,width, height,"Character",Vis, ctx);
+        super(x,y,width, height,"BlackBackground",Vis, ctx);
         this.FrameNum = 0;
         this.Source = Assets[SourceName];
         this.InitalTick = GameTicks;
@@ -522,7 +536,7 @@ class CutScene extends  ForegroundImage
         for (let i = 0; i < this.NumOfFrames; i++)
         {
             let curImg = new Image();
-            curImg.src = this.Source + i + ".png";
+            curImg.src = this.Source + i + ".jpg";
             console.log(curImg.src)
             this.ImgFrames.push(curImg);
         }
@@ -540,7 +554,10 @@ class CutScene extends  ForegroundImage
 
     update() {
         this.handAnimation();
-        super.update();
+        if (this.Visible)
+        {
+            this.ctx.drawImage(this.Image, this.x, this.y,1080,700);
+        }
     }
 }
 class Bullet
@@ -792,6 +809,7 @@ class CrystalAsteroid extends Asteroid
         this.MaxBlinkTime = 1;
         this.blinkAcc = 0.1;
         this.SecondsBetweenBlink = 1;
+        this.AssetName = AssetName;
         //this.findSpawnLocation();
         this.findSpawnLocation();
         this.HandleCollisions();
@@ -837,9 +855,11 @@ class CrystalAsteroid extends Asteroid
         {
             if (!this.CrystalActivated) {
                 this.CrystalActivated = true;
+                this.AssetName = "ActivatedCrystal";
                 this.Image.src = Assets["ActivatedCrystal"];
             } else {
                 this.CrystalActivated = false;
+                this.AssetName = "CrystalAsteroid"
                 this.Image.src = Assets["CrystalAsteroid"];
             }
             this.SecondsBetweenBlink -= this.blinkAcc;
@@ -847,6 +867,7 @@ class CrystalAsteroid extends Asteroid
         }
         else if (this.SecondsBetweenBlink <= 0)
         {
+            this.AssetName = "ActivatedCrystal";
             this.Image.src = Assets["ActivatedCrystal"];
         }
     }
@@ -881,9 +902,9 @@ class CrystalAsteroid extends Asteroid
             if (!IsDestroying)
             {
                 AstroidsPresent -= 1;
-                spawnMiniCrystalAsteroids("", this.x, this.y,this.width, this.height);
+                spawnMiniCrystalAsteroids(this.AssetName, this.x, this.y,this.width, this.height);
                 GameSounds.push(new Sound("Shatter",false,this.x,this.y));
-                AddObjStack.push(new SpriteAnimation("Explosion", this.x,this.y,90, 90, false,true,true, GameContext));
+                AddObjStack.push(new SpriteAnimation("Explosion2", this.x,this.y,90, 90, false,true,true, GameContext));
             }
         }
     }
@@ -901,6 +922,7 @@ class CrystalAsteroid extends Asteroid
         {
             this.SecondsBetweenBlink = this.MaxBlinkTime;
             this.Image.src = Assets["CrystalAsteroid"];
+            this.AssetName = "CrystalAsteroid";
         }
         if (AsteroidCrystalMove && this.Speed < this.MaxSpeed)
         {
@@ -927,7 +949,7 @@ class MinAsteroid extends Asteroid
 {
     constructor(AssetName,x, y, width, height, ctx) {
         super(AssetName,width, height, ctx);
-
+        this.AssetName = AssetName;
         this.x = x;
         this.y = y;
         this.DestroyDis = 1500;
@@ -949,9 +971,10 @@ class MinAsteroid extends Asteroid
         if (this.Explode)
         {
             let IsDestroying = DestroyObject(this);
-            if (!IsDestroying)
-            {
-                AddObjStack.push(new SpriteAnimation("Explosion", this.x,this.y,this.width + 10, this.height + 10, false,true,true, GameContext));
+            if (!IsDestroying) {
+                if (this.AssetName === "ActivatedCrystal" || this.AssetName === "ActivatedCrystal") {
+                    AddObjStack.push(new SpriteAnimation("Explosion2", this.x, this.y, this.width + 10, this.height + 10, false, true, true, GameContext));
+                }
             }
         }
     }
@@ -1229,7 +1252,6 @@ function initiateGame()
     document.fonts.add(new FontFace("RobotInvaders", "url('./Assets/Fonts/RobotInvaders.ttf')"));
     MainGameArea.start();
     ChangeScene("Menu");
-    //ChangeScene("CrystalSector")
     //GameCharacter = new Character(100, 100, ScreenWidth / 2 - 50, ScreenHeight / 2 - 50,MainGameArea.context);
     //Background = new BackgroundImage(-1032,-1000,2064, 3000,"Background", MainGameArea.context);
     //AddObjStack.push(new Asteroid(80,80,"red",GameContext));
@@ -1354,10 +1376,10 @@ function spawnMiniCrystalAsteroids(AssetName, X, Y,width, height)
     let MinAsteroidWidth = width / 4;
     let MinAsteroidHeight = height / 4;
     let EdgeDistance = 2;
-    AddObjStack.push(new MinAsteroid("ActivatedCrystal",X ,Y ,MinAsteroidWidth, MinAsteroidHeight,GameContext));
-    AddObjStack.push(new MinAsteroid("ActivatedCrystal",X + width,Y, MinAsteroidWidth,MinAsteroidHeight,GameContext));
-    AddObjStack.push(new MinAsteroid("ActivatedCrystal",X,Y + height,MinAsteroidWidth, MinAsteroidHeight,GameContext));
-    AddObjStack.push(new MinAsteroid("ActivatedCrystal",X + width,Y  + height,MinAsteroidWidth, MinAsteroidHeight,GameContext));
+    AddObjStack.push(new MinAsteroid(AssetName,X ,Y ,MinAsteroidWidth, MinAsteroidHeight,GameContext));
+    //AddObjStack.push(new MinAsteroid("ActivatedCrystal",X + width,Y, MinAsteroidWidth,MinAsteroidHeight,GameContext));
+    AddObjStack.push(new MinAsteroid(AssetName,X,Y + height,MinAsteroidWidth, MinAsteroidHeight,GameContext));
+    //AddObjStack.push(new MinAsteroid("ActivatedCrystal",X + width,Y  + height,MinAsteroidWidth, MinAsteroidHeight,GameContext));
 }
 
 function hyperDrive()
@@ -1374,6 +1396,7 @@ function restartAtCheckPoint(UA)
     if (RestartingScene === "Tutorial")
     {
         ChangeScene("Tutorial");
+        ChangeScene("MainGame");
     }
     else
     {
@@ -1397,7 +1420,7 @@ function ChangeScene(Scene)
         {
             SpawnAsteroids = false;
             Background = new BackgroundImage(0,0,1080, 700,"MenuBackground", MainGameArea.context);
-            GameObjects.push(new ScreenImageButton("Character",200,200, 50, ChangeScene,"BeginCutscene",50,true,GameContext))
+            GameObjects.push(new ScreenImageButton("Play",350,200, 150, ChangeScene,"BeginCutscene",50,true,GameContext))
             GameObjects.push(new Text(200,100,"ASTEROIDS","RobotInvaders","100px","white",GameContext) );
         }
         else if (Scene === "MainGame")
@@ -1419,6 +1442,7 @@ function ChangeScene(Scene)
         else if (Scene === "CrystalSector")
         {
             HyperspaceSound.stop();
+            MainMusic.changeSound("FabricOfSpace");
             RestartingScene = "CrystalSector"
             XDisplacement = 0;
             YDisplacement = 0;
@@ -1442,7 +1466,7 @@ function ChangeScene(Scene)
             AddObjStack.push(new TimerSwitch(100,100,"hello","Ariel",10,"white",true,restartSwitchTimers,true,GameTicks,AsteroidWaitTime,GameContext));
 
             AddObjStack.push(new DestinationPointer("Character",GameCharacter.x + GameCharacter.width/2,GameCharacter.y + GameCharacter.height/2, GameContext));
-            AddObjStack.push(new TargetPoint("EnergyCell",GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"Poem",MainGameArea.context));
+            AddObjStack.push(new TargetPoint("EnergyCell",GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"EndingCutscene",MainGameArea.context));
             Background = new BackgroundImage(-1700,-1150,1022, 1500,"CrystalBackground", MainGameArea.context);
             GameCharacter.MaxSpeed = 4;
             SpawnAsteroids = true;
@@ -1472,8 +1496,22 @@ function ChangeScene(Scene)
         else  if ( Scene === "BeginCutscene")
         {
             SpawnAsteroids = false;
-            AddObjStack.push(new CutScene(0,0,20, 20,"BeginningAnimation",true,1,5, MainGameArea.context))
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,10,GameContext));
+            AddObjStack.push(new CutScene(0,0,20, 20,"BeginningAnimation",true,10,145, MainGameArea.context))
+            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Sector1Cutscene",GameTicks,16,GameContext));
+        }
+        else  if ( Scene === "Sector1Cutscene")
+        {
+            SpawnAsteroids = false;
+            AddObjStack.push(new CutScene(0,0,20, 20,"SectorAnimation",true,10,49, MainGameArea.context))
+            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,9,GameContext));
+        }
+        else  if ( Scene === "EndingCutscene")
+        {
+            SpawnAsteroids = false;
+            SpawnAsteroids = false;
+            GameCharacter.Visible = false;
+            AddObjStack.push(new CutScene(0,0,20, 20,"EndingAnimation",true,10,99, MainGameArea.context))
+            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",false,ChangeScene,"Tutorial",GameTicks,18,GameContext));
         }
         else if (Scene === "Tutorial")
         {
@@ -1485,8 +1523,10 @@ function ChangeScene(Scene)
             GameCharacter = new Character(60, 123, ScreenWidth / 2, ScreenHeight / 2,MainGameArea.context);
             GameCharacter.MaxSpeed = 0;
             Foreground = new ForegroundImage(0,0,ScreenWidth, ScreenHeight,"SemiTransparent",false,MainGameArea.context);
-            RestartButton = new ScreenImageButton("Character",500,500,100,restartAtCheckPoint,"",100,true,MainGameArea.context)
+            RestartButton = new ScreenImageButton("Restart",500,500,100,restartAtCheckPoint,"",50,true,MainGameArea.context)
             RestartButton.Visible = false
+            RestartText = new Text(100,250,"Crashed", "RobotInvaders","200px","red",MainGameArea.context);
+            RestartText.Visible = false;
             Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
             HealthBar = new  StatBar(10,600,"white", GameCharacter.MaxHealth,100, 100, 30,GameContext);
             EngineBooster = new Booster("Fire1",20,60, GameContext);
@@ -1497,7 +1537,15 @@ function ChangeScene(Scene)
                     BoosterSound.sound.remove();
                 }
             }
+            if (MainMusic)
+            {
+                if (MainMusic.sound.isConnected)
+                {
+                    MainMusic.sound.remove();
+                }
+            }
             BoosterSound = new Sound("Thruster",true, GameCharacter.x, GameCharacter.y);
+            MainMusic = new Sound("HeartOfEternity",true, GameCharacter.x, GameCharacter.y);
             HyperspaceSound = new Sound("Hyperspace",true, GameCharacter.x, GameCharacter.y);
             BoosterSound.stop();
             AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"MainGame",GameTicks,30,GameContext));
@@ -1514,6 +1562,8 @@ function playerDeath()
 {
     Foreground.Visible = true;
     RestartButton.Visible = true;
+    RestartText.Visible = true;
+    GameObjects.push(new Text(100,250,"Crashed", "RobotInvaders","200px","red",MainGameArea.context));
 }
 
 var MainGameArea = {
@@ -1650,6 +1700,7 @@ function updateGame()
         EngineBooster.update();
         GameCharacter.update();
         Foreground.update();
+        RestartText.update();
         RestartButton.update();
     }
 
