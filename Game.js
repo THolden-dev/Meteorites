@@ -49,14 +49,14 @@ const TickPerSecond = 20;
 
 
 
-var Assets = {
-    "Character": "Assets/Character.png",
+const ImgPaths = {
+    "Character": "Assets/Character.png" ,
     "MainCharacter" : "Assets/MainCharacter.png",
-    "Background": "Assets/Background.jpg",
-    "Asteroid": "Assets/Asteroid.png",
-    "CrystalAsteroid": "Assets/CrystalAsteroid.png",
-    "ActivatedCrystal": "Assets/CrystalAsteroid2.png",
-    "AsterFragment" : "Assets/AsteroidFragment.png",
+    "Background":  "Assets/Background.jpg",
+    "Asteroid":  "Assets/Asteroid.png",
+    "CrystalAsteroid":   "Assets/CrystalAsteroid.png",
+    "ActivatedCrystal":  "Assets/CrystalAsteroid2.png",
+    "AsterFragment" :  "Assets/AsteroidFragment.png",
     "Bullet" : "Assets/Bullet.png",
     "Fire1" : "Assets/Animations/Fire/Fire1.png",
     "Fire2" : "Assets/Animations/Fire/Fire2.png",
@@ -65,12 +65,24 @@ var Assets = {
     "SemiTransparent" : "Assets/SemiTransparent.png",
     "MenuBackground" : "Assets/MenuBackground.png",
     "EnergyCell" : "Assets/EnergyCell.png",
-    "BeginningAnimation" : "Assets/Animations/InitialAnimation/Ani",
-    "EndingAnimation" : "Assets/Animations/Ending/Ending",
-    "SectorAnimation" : "Assets/Animations/SectorAni/SectorAni",
     "Play" : "Assets/LaunchButton.png",
     "Restart" : "Assets/RButtonText.png"
 };
+
+const Animations =
+    {
+        "BeginningAnimation" : "Assets/Animations/InitialAnimation/Ani",
+        "EndingAnimation" : "Assets/Animations/Ending/Ending",
+        "SectorAnimation" : "Assets/Animations/SectorAni/SectorAni",
+    };
+
+const Assets = {};
+
+for (const [key, path] of Object.entries(ImgPaths)) {
+    const img = new Image();
+    img.src = path;
+    Assets[key] = img;
+}
 
 var SoundSrcs = {
     "Shooting" : "Assets/Sounds/Shot.mp3",
@@ -82,10 +94,18 @@ var SoundSrcs = {
     "HeartOfEternity" : "Assets/Sounds/HeartofEternity.mp3"
 }
 //Records of sprites hold FrameWidth,FrameHeight,SpriteLength,AniSpeed(in ticks)
-var Sprites = {
+var SpritesSrc = {
     "Explosion" : ["Assets/Sprites/Explosion/Explosion.png",199,239,7,10],
     "Explosion2" : ["Assets/Sprites/Explosion/Explosion2.png",199,239,7,10]
 }
+const Sprites = {};
+
+for (const [key, path] of Object.entries(SpritesSrc)) {
+    const img = new Image();
+    img.src = path[0];
+    Sprites[key] = img;
+}
+
 
 class Line
 {
@@ -210,6 +230,7 @@ class Sound
     {
         this.sound.src = SoundSrcs[NewSound];
         this.sound.currentTime = 0;
+        this.sound.play();
     }
     update()
     {
@@ -358,8 +379,7 @@ class TimerSwitch extends Text
 class ScreenImageButton
 {
     constructor(AssetName,x,y, width,ClickFunction,FuncArgs, height,ActivateOnce,ctx) {
-        this.Image = new Image();
-        this.Image.src = Assets[AssetName];
+        this.Image = Assets[AssetName];
         this.x = x;
         this.y = y;
         this.width = width;
@@ -406,8 +426,7 @@ class DestinationPointer
         this.Rotation = 0;
         this.width = 30;
         this.height = 30;
-        this.Image = new Image();
-        this.Image.src = Assets[AssetName];
+        this.Image = Assets[AssetName];
         this.ctx = ctx;
     }
     handleRotation()
@@ -429,8 +448,7 @@ class SpriteAnimation
 {
     constructor(AniName, x,y,width, height, Looping,DestroyWhenFinished,Displacable, ctx)
     {
-        this.Image = new Image();
-        this.Image.src = Sprites[AniName][0];
+        this.Image = Sprites[AniName];
         this.x = x;
         this.y = y;
         this.CurDisX = XDisplacement;
@@ -442,12 +460,12 @@ class SpriteAnimation
         this.Displaceable = Displacable;
         this.LastTick = GameTicks;
         this.CurrentFrame = 0;
-        this.FrameRate = Sprites[AniName][4];
-        this.FrameWidth = Sprites[AniName][1]
-        this.FrameHeight = Sprites[AniName][2];
+        this.FrameRate = SpritesSrc[AniName][4];
+        this.FrameWidth = SpritesSrc[AniName][1]
+        this.FrameHeight = SpritesSrc[AniName][2];
         this.FrameX = 0;
         this.FrameY = 0;
-        this.Length = Sprites[AniName][3]
+        this.Length = SpritesSrc[AniName][3]
         this.ctx = ctx;
     }
     HandleSprite()
@@ -485,8 +503,7 @@ class BackgroundImage
         this.width = width;
         this.height = height;
         this.ctx = ctx
-        this.Image = new Image();
-        this.Image.src = Assets[Img];
+        this.Image = Assets[Img];
         this.CurDisX = 0;
         this.CurDisY = 0;
         this.Sensitivity = 0.2;
@@ -524,7 +541,7 @@ class CutScene extends  ForegroundImage
     constructor(x,y,width, height,SourceName,Vis,FPS,NumOfFrames, ctx) {
         super(x,y,width, height,"BlackBackground",Vis, ctx);
         this.FrameNum = 0;
-        this.Source = Assets[SourceName];
+        this.Source = Animations[SourceName];
         this.InitalTick = GameTicks;
         this.ImgFrames = [];
         this.SecondsPerFrame = 1 / FPS;
@@ -569,8 +586,7 @@ class Bullet
         this.width = width;
         this.height = height;
         this.Rotation = -Rotation;
-        this.Image = new Image();
-        this.Image.src = Assets["Bullet"];
+        this.Image = Assets["Bullet"];
         this.Speed = -30;
         this.ctx = ctx;
         this.CurDisX = XDisplacement;
@@ -629,8 +645,7 @@ class Asteroid
 {
     constructor(AssetName,width, height, ctx)
     {
-        this.Image = new Image();
-        this.Image.src = Assets[AssetName];
+        this.Image = Assets[AssetName];
         this.RangeFromScreenEdge = 100;
         this.width = width;
         this.height = height;
@@ -856,11 +871,11 @@ class CrystalAsteroid extends Asteroid
             if (!this.CrystalActivated) {
                 this.CrystalActivated = true;
                 this.AssetName = "ActivatedCrystal";
-                this.Image.src = Assets["ActivatedCrystal"];
+                this.Image = Assets["ActivatedCrystal"];
             } else {
                 this.CrystalActivated = false;
                 this.AssetName = "CrystalAsteroid"
-                this.Image.src = Assets["CrystalAsteroid"];
+                this.Image = Assets["CrystalAsteroid"];
             }
             this.SecondsBetweenBlink -= this.blinkAcc;
             this.LastBlinkTick = GameTicks;
@@ -868,7 +883,7 @@ class CrystalAsteroid extends Asteroid
         else if (this.SecondsBetweenBlink <= 0)
         {
             this.AssetName = "ActivatedCrystal";
-            this.Image.src = Assets["ActivatedCrystal"];
+            this.Image = Assets["ActivatedCrystal"];
         }
     }
 
@@ -921,7 +936,7 @@ class CrystalAsteroid extends Asteroid
         else
         {
             this.SecondsBetweenBlink = this.MaxBlinkTime;
-            this.Image.src = Assets["CrystalAsteroid"];
+            this.Image = Assets["CrystalAsteroid"];
             this.AssetName = "CrystalAsteroid";
         }
         if (AsteroidCrystalMove && this.Speed < this.MaxSpeed)
@@ -1041,8 +1056,7 @@ class Character
         this.orgY = y - height / 2;
         this.x = x - width / 2;
         this.y = y - height / 2;
-        this.Image = new Image();
-        this.Image.src = Assets["MainCharacter"];
+        this.Image = Assets["MainCharacter"];
         this.Collidable = true;
     }
 
@@ -1168,10 +1182,8 @@ class Booster extends DestinationPointer{
         this.height = height;
         this.width = width;
         this.Flipped = false;
-        this.Image1 = new Image();
-        this.Image1.src = Assets["Fire1"];
-        this.Image2 = new Image();
-        this.Image2.src = Assets["Fire2"];
+        this.Image1 = Assets["Fire1"];
+        this.Image2 = Assets["Fire2"];
         this.DistanceFromCent = height;
         this.FrameRate = 0.5;
         this.LastTick = GameTicks;
@@ -1218,8 +1230,7 @@ class TargetPoint
     constructor(AssetName,x,y,ArrivalFunction,FuncArgs,ctx) {
         this.x = x;
         this.y = y;
-        this.Image = new Image();
-        this.Image.src = Assets[AssetName];
+        this.Image = Assets[AssetName];
         this.MinDistance = 200;
         this.ArrivalFunction = ArrivalFunction;
         this.FuncArgs = FuncArgs;
