@@ -211,6 +211,7 @@ class Sound
     }
     changeSound(NewSound)
     {
+        this.sound.pause();
         this.sound = SoundSrcs[NewSound].cloneNode();
         this.sound.currentTime = 0;
         this.sound.play();
