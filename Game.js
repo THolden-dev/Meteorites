@@ -8,6 +8,7 @@ var EngineBooster;
 var BoosterSound;
 var HyperspaceSound;
 var MainMusic;
+var HealthContainter;
 
 var GameContext = "";
 let GameObjects = [];
@@ -535,16 +536,38 @@ class CutScene extends  ForegroundImage
         this.ImgFrames = [];
         this.SecondsPerFrame = 1 / FPS;
         this.NumOfFrames = NumOfFrames;
+        this.AnimationLoaded = false;
         this.loadAnimation();
     }
-    loadAnimation()
-    {
-        for (let i = 0; i < this.NumOfFrames; i++)
-        {
-            let curImg = new Image();
-            curImg.src = this.Source + i + ".jpg";
-            console.log(curImg.src)
-            this.ImgFrames.push(curImg);
+    async loadAnimation() {
+        const Sources = [];
+        for (let i = 0; i < this.NumOfFrames; i++) {
+            Sources.push(this.Source + i + ".jpg");
+        }
+
+        // Await the async loader to get actual array
+        this.ImgFrames = await this.loadAllFramesParallel(Sources);
+        console.log("Frames loaded:", this.ImgFrames);
+        this.AnimationLoaded = true; // mark animation ready
+    }
+
+    async loadAllFramesParallel(urls) {
+        const promises = urls.map(url =>
+            new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(url);
+                img.src = url;
+            })
+        );
+
+        try {
+            const images = await Promise.all(promises);
+            console.log("✅ All frames loaded successfully!");
+            return images; // return the array
+        } catch (failedUrl) {
+            console.error(`❌ Failed to load: ${failedUrl}`);
+            return []; // fallback
         }
     }
     handAnimation()
@@ -559,9 +582,9 @@ class CutScene extends  ForegroundImage
     }
 
     update() {
-        this.handAnimation();
-        if (this.Visible)
-        {
+        if (this.Visible && this.AnimationLoaded){
+            console.log(this.ImgFrames);
+            this.handAnimation();
             this.ctx.drawImage(this.Image, this.x, this.y,1080,700);
         }
     }
@@ -1426,6 +1449,7 @@ function ChangeScene(Scene)
         else if (Scene === "MainGame")
         {
             HyperspaceSound.stop();
+            MainMusic.changeSound("HeartOfEternity");
             AsteroidAsset = "Asteroid";
             AstroidsPresent = 0;
             MaxAstroids = 60;
@@ -1473,6 +1497,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "Poem" && PoemNumber === 0)
         {
+            MainMusic.stop();
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
             Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
@@ -1484,6 +1509,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "Poem" && PoemNumber === 1)
         {
+            MainMusic.stop();
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
             Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
@@ -1546,6 +1572,7 @@ function ChangeScene(Scene)
             }
             BoosterSound = new Sound("Thruster",true, GameCharacter.x, GameCharacter.y);
             MainMusic = new Sound("HeartOfEternity",true, GameCharacter.x, GameCharacter.y);
+            MainMusic.stop();
             HyperspaceSound = new Sound("Hyperspace",true, GameCharacter.x, GameCharacter.y);
             BoosterSound.stop();
             AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"MainGame",GameTicks,30,GameContext));
