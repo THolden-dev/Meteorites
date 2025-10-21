@@ -575,7 +575,7 @@ class CutScene extends  ForegroundImage
         if (ticksToSeconds(GameTicks - this.InitalTick) >= this.SecondsPerFrame && this.FrameNum < this.NumOfFrames)
         {
             this.InitalTick = GameTicks;
-            console.log(this.Source + this.FrameNum + ".png")
+
             this.Image = this.ImgFrames[this.FrameNum]
             this.FrameNum++;
         }
@@ -583,7 +583,6 @@ class CutScene extends  ForegroundImage
 
     update() {
         if (this.Visible && this.AnimationLoaded){
-            console.log(this.ImgFrames);
             this.handAnimation();
             this.ctx.drawImage(this.Image, this.x, this.y,1080,700);
         }
