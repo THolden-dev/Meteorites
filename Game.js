@@ -331,6 +331,7 @@ class TextTimer extends Text
         }
         if (!AnimationLoaded)
         {
+            console.log("looping")
             this.InitialTick = GameTicks;
         }
     }
@@ -1456,7 +1457,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "MainGame")
         {
-            AnimationLoaded = false;
+            AnimationLoaded = true;
             HyperspaceSound.stop();
             MainMusic.changeSound("HeartOfEternity");
             AsteroidAsset = "Asteroid";
@@ -1474,7 +1475,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "CrystalSector")
         {
-            AnimationLoaded = false;
+            AnimationLoaded = true;
             HyperspaceSound.stop();
             MainMusic.changeSound("FabricOfSpace");
             RestartingScene = "CrystalSector"
@@ -1507,7 +1508,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "Poem" && PoemNumber === 0)
         {
-            AnimationLoaded = false;
+            AnimationLoaded = true;
             MainMusic.stop();
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
@@ -1520,7 +1521,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "Poem" && PoemNumber === 1)
         {
-            AnimationLoaded = false;
+            AnimationLoaded = true;
             MainMusic.stop();
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
@@ -1556,7 +1557,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "Tutorial")
         {
-            AnimationLoaded = false;
+            AnimationLoaded = true;
             SpawnAsteroids = false;
             XDisplacement = 0;
             YDisplacement = 0;
