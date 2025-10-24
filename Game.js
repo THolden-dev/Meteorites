@@ -21,6 +21,7 @@ let MoveKeysPressed = [false,false,false];
 let Firing = false;
 var AstroidsPresent = 0;
 var SpawnAsteroids = false;
+var AnimationLoaded = false;
 var MaxAstroids = 60;
 const ScreenWidth = 1080
 const ScreenHeight = 700
@@ -67,7 +68,8 @@ const ImgPaths = {
     "MenuBackground" : "Assets/MenuBackground.png",
     "EnergyCell" : "Assets/EnergyCell.png",
     "Play" : "Assets/LaunchButton.png",
-    "Restart" : "Assets/RButtonText.png"
+    "Restart" : "Assets/RButtonText.png",
+    "HealthContainer": "Assets/HealthContainter.png"
 };
 
 const Animations =
@@ -215,6 +217,7 @@ class Sound
         this.sound.pause();
         this.sound = SoundSrcs[NewSound].cloneNode();
         this.sound.currentTime = 0;
+        this.Source = NewSound;
         this.sound.play();
     }
     update()
@@ -223,10 +226,9 @@ class Sound
         {
             GameSounds.splice(GameSounds.indexOf(this),1);
         }
-        else if (this.Looping)
+        else if (this.Looping && this.sound.ended)
         {
-            this.sound.currentTime = 0;
-            this.sound.play();
+            this.changeSound(this.Source);
         }
     }
     stop()
@@ -326,6 +328,10 @@ class TextTimer extends Text
             this.Function(this.FuncArgs);
             this.Activated = true;
             DestroyObject(this);
+        }
+        if (!AnimationLoaded)
+        {
+            this.InitialTick = GameTicks;
         }
     }
 }
@@ -549,6 +555,7 @@ class CutScene extends  ForegroundImage
         this.ImgFrames = await this.loadAllFramesParallel(Sources);
         console.log("Frames loaded:", this.ImgFrames);
         this.AnimationLoaded = true; // mark animation ready
+        AnimationLoaded = true;
     }
 
     async loadAllFramesParallel(urls) {
@@ -563,10 +570,10 @@ class CutScene extends  ForegroundImage
 
         try {
             const images = await Promise.all(promises);
-            console.log("✅ All frames loaded successfully!");
+            console.log("All frames loaded successfully!");
             return images; // return the array
         } catch (failedUrl) {
-            console.error(`❌ Failed to load: ${failedUrl}`);
+            console.error(`Failed to load: ${failedUrl}`);
             return []; // fallback
         }
     }
@@ -1274,6 +1281,7 @@ function initiateGame()
     document.fonts.add(new FontFace("RobotInvaders", "url('./Assets/Fonts/RobotInvaders.ttf')"));
     MainGameArea.start();
     ChangeScene("Menu");
+    //ChangeScene("MainGame");
     //GameCharacter = new Character(100, 100, ScreenWidth / 2 - 50, ScreenHeight / 2 - 50,MainGameArea.context);
     //Background = new BackgroundImage(-1032,-1000,2064, 3000,"Background", MainGameArea.context);
     //AddObjStack.push(new Asteroid(80,80,"red",GameContext));
@@ -1441,12 +1449,14 @@ function ChangeScene(Scene)
         if (Scene === "Menu")
         {
             SpawnAsteroids = false;
+            AnimationLoaded = false;
             Background = new BackgroundImage(0,0,1080, 700,"MenuBackground", MainGameArea.context);
             GameObjects.push(new ScreenImageButton("Play",350,200, 150, ChangeScene,"BeginCutscene",50,true,GameContext))
             GameObjects.push(new Text(200,100,"ASTEROIDS","RobotInvaders","100px","white",GameContext) );
         }
         else if (Scene === "MainGame")
         {
+            AnimationLoaded = false;
             HyperspaceSound.stop();
             MainMusic.changeSound("HeartOfEternity");
             AsteroidAsset = "Asteroid";
@@ -1464,6 +1474,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "CrystalSector")
         {
+            AnimationLoaded = false;
             HyperspaceSound.stop();
             MainMusic.changeSound("FabricOfSpace");
             RestartingScene = "CrystalSector"
@@ -1484,9 +1495,9 @@ function ChangeScene(Scene)
             }
             InitialSpawn = false;
             MaxAstroids = 110;
-            AddObjStack.push(new TimerSwitch(100,100,"Hello","Ariel",30,"white",true,setCrystalAsteroidMovement,true,GameTicks,AsteroidWaitTime,GameContext));
-            AddObjStack.push(new TimerSwitch(100,100,"hello","Ariel",10,"white",true,setCrystalAsteroidBlink,true,GameTicks,AsteroidWaitTime - 3,GameContext));
-            AddObjStack.push(new TimerSwitch(100,100,"hello","Ariel",10,"white",true,restartSwitchTimers,true,GameTicks,AsteroidWaitTime,GameContext));
+            AddObjStack.push(new TimerSwitch(100,100,"Hello","Ariel",30,"white",false,setCrystalAsteroidMovement,true,GameTicks,AsteroidWaitTime,GameContext));
+            AddObjStack.push(new TimerSwitch(100,100,"hello","Ariel",10,"white",false,setCrystalAsteroidBlink,true,GameTicks,AsteroidWaitTime - 3,GameContext));
+            AddObjStack.push(new TimerSwitch(100,100,"hello","Ariel",10,"white",false,restartSwitchTimers,true,GameTicks,AsteroidWaitTime,GameContext));
 
             AddObjStack.push(new DestinationPointer("Character",GameCharacter.x + GameCharacter.width/2,GameCharacter.y + GameCharacter.height/2, GameContext));
             AddObjStack.push(new TargetPoint("EnergyCell",GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"EndingCutscene",MainGameArea.context));
@@ -1496,6 +1507,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "Poem" && PoemNumber === 0)
         {
+            AnimationLoaded = false;
             MainMusic.stop();
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
@@ -1508,6 +1520,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "Poem" && PoemNumber === 1)
         {
+            AnimationLoaded = false;
             MainMusic.stop();
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
@@ -1520,18 +1533,21 @@ function ChangeScene(Scene)
         }
         else  if ( Scene === "BeginCutscene")
         {
+            AnimationLoaded = false;
             SpawnAsteroids = false;
             AddObjStack.push(new CutScene(0,0,20, 20,"BeginningAnimation",true,10,145, MainGameArea.context))
             AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Sector1Cutscene",GameTicks,16,GameContext));
         }
         else  if ( Scene === "Sector1Cutscene")
         {
+            AnimationLoaded = false;
             SpawnAsteroids = false;
             AddObjStack.push(new CutScene(0,0,20, 20,"SectorAnimation",true,10,49, MainGameArea.context))
             AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,9,GameContext));
         }
         else  if ( Scene === "EndingCutscene")
         {
+            AnimationLoaded = false;
             SpawnAsteroids = false;
             SpawnAsteroids = false;
             GameCharacter.Visible = false;
@@ -1540,6 +1556,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "Tutorial")
         {
+            AnimationLoaded = false;
             SpawnAsteroids = false;
             XDisplacement = 0;
             YDisplacement = 0;
@@ -1548,6 +1565,7 @@ function ChangeScene(Scene)
             GameCharacter = new Character(60, 123, ScreenWidth / 2, ScreenHeight / 2,MainGameArea.context);
             GameCharacter.MaxSpeed = 0;
             Foreground = new ForegroundImage(0,0,ScreenWidth, ScreenHeight,"SemiTransparent",false,MainGameArea.context);
+            HealthContainter = new ForegroundImage(482,590,150,30,"HealthContainer",true,MainGameArea.context);
             RestartButton = new ScreenImageButton("Restart",500,500,100,restartAtCheckPoint,"",50,true,MainGameArea.context)
             RestartButton.Visible = false
             RestartText = new Text(100,250,"Crashed", "RobotInvaders","200px","red",MainGameArea.context);
@@ -1728,6 +1746,8 @@ function updateGame()
         Foreground.update();
         RestartText.update();
         RestartButton.update();
+        HealthContainter.update();
+        MainMusic.update();
     }
 
     //console.log(AstrCount, AstroidsPresent);
