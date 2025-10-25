@@ -1091,7 +1091,7 @@ class Character
         this.SpeedX = 0;
         this.SpeedY = 0;
         this.Rotation = 0;
-        this.RotationSpeed = 2;
+        this.RotationSpeed = 2.6;
         this.Visible = true;
         this.Acceleration = 0.2;
         this.DisableControls = false;
