@@ -94,6 +94,7 @@ const ImgPaths = {
     "EnergyCell" : "Assets/EnergyCell.png",
     "Play" : "Assets/LaunchButton.png",
     "Restart" : "Assets/RButtonText.png",
+    "Next" : "Assets/NextButton.png",
     "HealthContainer": "Assets/HealthContainter.png"
 };
 
@@ -1543,7 +1544,8 @@ function ChangeScene(Scene)
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
             Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"CrystalSector",GameTicks,25,GameContext));
+            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"CrystalSector",GameTicks,25,GameContext));
+            AddObjStack.push(new ScreenImageButton("Next",800,500, 150, ChangeScene,"CrystalSector",50,true,GameContext))
             let PosY = 30;
             let PosX = 100;
             let textSize = 40;
@@ -1564,7 +1566,8 @@ function ChangeScene(Scene)
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
             Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"EndingCutscene",GameTicks,25,GameContext));
+            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"EndingCutscene",GameTicks,25,GameContext));
+            AddObjStack.push(new ScreenImageButton("Next",800,500, 150, ChangeScene,"EndingCutscene",50,true,GameContext))
             let PosY = 30;
             let PosX = 60;
             let textSize = 40;
@@ -1622,10 +1625,11 @@ function ChangeScene(Scene)
             let PosX = 100;
             let textSize = 40;
             let colour = "red";
+            AddObjStack.push(new ScreenImageButton("Next",800,500, 150, ChangeScene,"Sector1Cutscene",50,true,GameContext));
             AddObjStack.push(new Text(PosX,PosY + textSize,Poems[PoemNumber][0],"RobotInvaders",textSize + "px",colour,GameContext));
             AddObjStack.push(new Text(PosX,PosY + textSize*2,Poems[PoemNumber][1],"RobotInvaders",textSize + "px",colour,GameContext));
             AddObjStack.push(new CutScene(0,0,20, 20,"BeginningAnimation",true,10,145, MainGameArea.context))
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Sector1Cutscene",GameTicks,20,GameContext));
+            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Sector1Cutscene",GameTicks,20,GameContext));
         }
         else  if ( Scene === "Sector1Cutscene")
         {
@@ -1635,10 +1639,12 @@ function ChangeScene(Scene)
             let PosX = 100;
             let textSize = 40;
             let colour = "red";
+            AddObjStack.push(new ScreenImageButton("Next",800,500, 150, ChangeScene,"Tutorial",50,true,GameContext));
             AddObjStack.push(new Text(PosX,PosY + textSize,Poems[PoemNumber][2],"RobotInvaders",textSize + "px",colour,GameContext));
             AddObjStack.push(new Text(PosX,PosY + textSize*2,Poems[PoemNumber][3],"RobotInvaders",textSize + "px",colour,GameContext));
             AddObjStack.push(new CutScene(0,0,20, 20,"SectorAnimation",true,10,49, MainGameArea.context))
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,15,GameContext));
+            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,15,GameContext));
+
         }
         else  if ( Scene === "EndingCutscene")
         {
@@ -1646,8 +1652,9 @@ function ChangeScene(Scene)
             SpawnAsteroids = false;
             SpawnAsteroids = false;
             GameCharacter.Visible = false;
+            AddObjStack.push(new ScreenImageButton("Next",800,500, 150, ChangeScene,"Poem",50,true,GameContext));
             AddObjStack.push(new CutScene(0,0,20, 20,"EndingAnimation",true,10,118, MainGameArea.context))
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",false,ChangeScene,"Poem",GameTicks,13,GameContext));
+            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",false,ChangeScene,"Poem",GameTicks,13,GameContext));
         }
         else if (Scene === "Tutorial")
         {
