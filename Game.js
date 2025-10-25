@@ -31,7 +31,32 @@ var DeleteObjStack = [];
 var AddObjStack = [];
 var GameTicks = 0;
 var PoemNumber = 0;
-var Poems = ["Hello"];
+var Poems = [["The forgotten ruins and shifting sands,",
+"Are all what's felt of human lands.",
+"The beaming sun and the rising tides,",
+"Have dried and drowned your earthly ties.",
+"You step upon the ship named Hope,",
+"You and your vessel to both elope.",
+"Because no longer can you sail the seas",
+"You ask, what vaingloriousness are these?",
+"No, instead you set out for the stars,",
+"To Saturn, Jupiter and then to Mars.",
+"But beware!",
+"For these woods these are, you think you know,",
+"Belong to Fate, It holds the reign,",
+"And thus it casts a meteriod hurricaine!"],
+    ["Your eyes are eyes that roved the stars,",
+    "And your journey is written on battle scars.",
+    "Although you once set out as twain",
+    "You converge with a chain",
+    "Of ships in need of the electric gold",
+    "That your ship in her veins does hold.",
+    "So you fill the tanks and hearts of others,",
+    "And gain seven thousand sisters and brothers.",
+    "But don't forget the land you lost,",
+    "Greed and vanity are at a human's cost,",
+    "And the life you live is a life you loan,",
+    "For the galaxy's woods are not your own."],"hello","end"];
 var DisableControls = false;
 let GameTargetPosition = [-100,-100]
 var AsteroidAsset = "Asteroid";
@@ -52,12 +77,12 @@ const TickPerSecond = 20;
 
 
 const ImgPaths = {
-    "Character": "Assets/Character.png" ,
+    "Character" : "Assets/Character.png" ,
     "MainCharacter" : "Assets/MainCharacter.png",
-    "Background":  "Assets/Background.jpg",
-    "Asteroid":  "Assets/Asteroid.png",
-    "CrystalAsteroid":   "Assets/CrystalAsteroid.png",
-    "ActivatedCrystal":  "Assets/CrystalAsteroid2.png",
+    "Background" :  "Assets/Background.jpg",
+    "Asteroid" : "Assets/Asteroid.png",
+    "CrystalAsteroid" : "Assets/CrystalAsteroid.png",
+    "ActivatedCrystal" :  "Assets/CrystalAsteroid2.png",
     "AsterFragment" :  "Assets/AsteroidFragment.png",
     "Bullet" : "Assets/Bullet.png",
     "Fire1" : "Assets/Animations/Fire/Fire1.png",
@@ -94,7 +119,11 @@ var SoundSrcs = {
     "Shatter" : new Audio("Assets/Sounds/Shatter.mp3"),
     "Hyperspace" : new Audio("Assets/Sounds/Hyperspace.mp3"),
     "FabricOfSpace" : new Audio("Assets/Sounds/FabricofSpace.mp3"),
-    "HeartOfEternity" : new Audio("Assets/Sounds/HeartofEternity.mp3")
+    "HeartOfEternity" : new Audio("Assets/Sounds/HeartofEternity.mp3"),
+    "BrianEnoAnEnding" : new Audio("Assets/Sounds/BrianEnoAnEnding.mp3"),
+    "PartyHorn" : new Audio("Assets/Sounds/PartyHorn.mp3"),
+    "Clapping" : new Audio("Assets/Sounds/Clapping.mp3"),
+
 }
 //Records of sprites hold FrameWidth,FrameHeight,SpriteLength,AniSpeed(in ticks)
 var SpritesSrc = {
@@ -1282,7 +1311,7 @@ function initiateGame()
     document.fonts.add(new FontFace("RobotInvaders", "url('./Assets/Fonts/RobotInvaders.ttf')"));
     MainGameArea.start();
     ChangeScene("Menu");
-    //ChangeScene("MainGame");
+    //ChangeScene("Poem");
     //GameCharacter = new Character(100, 100, ScreenWidth / 2 - 50, ScreenHeight / 2 - 50,MainGameArea.context);
     //Background = new BackgroundImage(-1032,-1000,2064, 3000,"Background", MainGameArea.context);
     //AddObjStack.push(new Asteroid(80,80,"red",GameContext));
@@ -1453,7 +1482,7 @@ function ChangeScene(Scene)
             AnimationLoaded = false;
             Background = new BackgroundImage(0,0,1080, 700,"MenuBackground", MainGameArea.context);
             GameObjects.push(new ScreenImageButton("Play",350,200, 150, ChangeScene,"BeginCutscene",50,true,GameContext))
-            GameObjects.push(new Text(200,100,"ASTEROIDS","RobotInvaders","100px","white",GameContext) );
+            GameObjects.push(new Text(190,90,"METEORITES","RobotInvaders","100px","white",GameContext) );
         }
         else if (Scene === "MainGame")
         {
@@ -1475,6 +1504,7 @@ function ChangeScene(Scene)
         }
         else if (Scene === "CrystalSector")
         {
+            PoemNumber = 1;
             AnimationLoaded = true;
             HyperspaceSound.stop();
             MainMusic.changeSound("FabricOfSpace");
@@ -1501,7 +1531,7 @@ function ChangeScene(Scene)
             AddObjStack.push(new TimerSwitch(100,100,"hello","Ariel",10,"white",false,restartSwitchTimers,true,GameTicks,AsteroidWaitTime,GameContext));
 
             AddObjStack.push(new DestinationPointer("Character",GameCharacter.x + GameCharacter.width/2,GameCharacter.y + GameCharacter.height/2, GameContext));
-            AddObjStack.push(new TargetPoint("EnergyCell",GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"EndingCutscene",MainGameArea.context));
+            AddObjStack.push(new TargetPoint("EnergyCell",GameTargetPosition[0],GameTargetPosition[1],ChangeScene,"Poem",MainGameArea.context));
             Background = new BackgroundImage(-1700,-1150,1022, 1500,"CrystalBackground", MainGameArea.context);
             GameCharacter.MaxSpeed = 4;
             SpawnAsteroids = true;
@@ -1513,8 +1543,16 @@ function ChangeScene(Scene)
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
             Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"CrystalSector",GameTicks,10,GameContext));
-            AddObjStack.push(new Text(300,300,Poems[PoemNumber],"Ariel","100px","red",GameContext));
+            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"CrystalSector",GameTicks,25,GameContext));
+            let PosY = 30;
+            let PosX = 100;
+            let textSize = 40;
+            let colour = "red";
+            AddObjStack.push(new Text(PosX,PosY + textSize,Poems[PoemNumber][4],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*2,Poems[PoemNumber][5],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*3,Poems[PoemNumber][6],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*4,Poems[PoemNumber][7],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*5,Poems[PoemNumber][8],"RobotInvaders",textSize + "px",colour,GameContext));
             hyperDrive();
 
             PoemNumber++;
@@ -1522,11 +1560,55 @@ function ChangeScene(Scene)
         else if (Scene === "Poem" && PoemNumber === 1)
         {
             AnimationLoaded = true;
-            MainMusic.stop();
+            MainMusic.changeSound("BrianEnoAnEnding");
             SpawnAsteroids = false;
             GameCharacter.MaxSpeed = 0;
             Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,10,GameContext));
+            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"EndingCutscene",GameTicks,25,GameContext));
+            let PosY = 30;
+            let PosX = 60;
+            let textSize = 40;
+            let colour = "red";
+            AddObjStack.push(new Text(PosX,PosY + textSize,Poems[PoemNumber][0],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*2,Poems[PoemNumber][1],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*3,Poems[PoemNumber][2],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*4,Poems[PoemNumber][3],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*5,Poems[PoemNumber][4],"RobotInvaders",textSize + "px",colour,GameContext));
+            hyperDrive();
+
+            PoemNumber++;
+        }
+        else if (Scene === "Poem" && PoemNumber === 2)
+        {
+            AnimationLoaded = true;
+            GameCharacter.Visible = true;
+            SpawnAsteroids = false;
+            GameCharacter.MaxSpeed = 0;
+            Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
+            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"EndingCutscene",GameTicks,10,GameContext));
+            let PosY = 30;
+            let PosX = 60;
+            let textSize = 40;
+            let colour = "red";
+            GameSounds.push(new Sound("PartyHorn",false,GameCharacter.x,GameCharacter.y))
+            GameSounds.push(new Sound("Clapping",false,GameCharacter.x,GameCharacter.y))
+            AddObjStack.push(new Text(PosX,PosY + textSize,Poems[1][6],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*2,Poems[1][7],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX + 80,PosY + textSize*4,"HAPPY BIRTHDAY","RobotInvaders",100 + "px","yellow",GameContext));
+            AddObjStack.push(new Text(PosX + 280,PosY + textSize*6,"DADDY","RobotInvaders",100 + "px","yellow",GameContext));
+            //AddObjStack.push(new Text(PosX,PosY + textSize*3,Poems[1][2],"RobotInvaders",textSize + "px",colour,GameContext));
+            hyperDrive();
+
+            PoemNumber++;
+        }
+        else if (Scene === "Poem" && PoemNumber === 3)
+        {
+            AnimationLoaded = true;
+            MainMusic.changeSound("BrianEnoAnEnding");
+            SpawnAsteroids = false;
+            GameCharacter.MaxSpeed = 0;
+            Background = new BackgroundImage(-100,-100,1022, 1500,"BlackBackground", MainGameArea.context);
+            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"EndingCutscene",GameTicks,10,GameContext));
             AddObjStack.push(new Text(300,300,Poems[PoemNumber],"Ariel","100px","red",GameContext));
             hyperDrive();
 
@@ -1536,15 +1618,27 @@ function ChangeScene(Scene)
         {
             AnimationLoaded = false;
             SpawnAsteroids = false;
+            let PosY = 600;
+            let PosX = 100;
+            let textSize = 40;
+            let colour = "red";
+            AddObjStack.push(new Text(PosX,PosY + textSize,Poems[PoemNumber][0],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*2,Poems[PoemNumber][1],"RobotInvaders",textSize + "px",colour,GameContext));
             AddObjStack.push(new CutScene(0,0,20, 20,"BeginningAnimation",true,10,145, MainGameArea.context))
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Sector1Cutscene",GameTicks,16,GameContext));
+            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Sector1Cutscene",GameTicks,20,GameContext));
         }
         else  if ( Scene === "Sector1Cutscene")
         {
             AnimationLoaded = false;
             SpawnAsteroids = false;
+            let PosY = 100;
+            let PosX = 100;
+            let textSize = 40;
+            let colour = "red";
+            AddObjStack.push(new Text(PosX,PosY + textSize,Poems[PoemNumber][2],"RobotInvaders",textSize + "px",colour,GameContext));
+            AddObjStack.push(new Text(PosX,PosY + textSize*2,Poems[PoemNumber][3],"RobotInvaders",textSize + "px",colour,GameContext));
             AddObjStack.push(new CutScene(0,0,20, 20,"SectorAnimation",true,10,49, MainGameArea.context))
-            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,9,GameContext));
+            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",true,ChangeScene,"Tutorial",GameTicks,15,GameContext));
         }
         else  if ( Scene === "EndingCutscene")
         {
@@ -1552,8 +1646,8 @@ function ChangeScene(Scene)
             SpawnAsteroids = false;
             SpawnAsteroids = false;
             GameCharacter.Visible = false;
-            AddObjStack.push(new CutScene(0,0,20, 20,"EndingAnimation",true,10,99, MainGameArea.context))
-            //AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",false,ChangeScene,"Tutorial",GameTicks,18,GameContext));
+            AddObjStack.push(new CutScene(0,0,20, 20,"EndingAnimation",true,10,118, MainGameArea.context))
+            AddObjStack.push(new TextTimer(100,100,"Hello","Ariel",30,"white",false,ChangeScene,"Poem",GameTicks,13,GameContext));
         }
         else if (Scene === "Tutorial")
         {
